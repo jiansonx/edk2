@@ -12,11 +12,14 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
-
+// #pragma optimize( "", off )
 #include <Uefi.h>
 #include <Library/PcdLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiApplicationEntryPoint.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
+#include <Guid/GlobalVariable.h>
 
 //
 // String token ID of help message text.
@@ -46,20 +49,40 @@ UefiMain (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-  UINT32 Index;
+  EFI_STATUS                      Status; 
+  UINT64                          Data;
+  UINTN                           DataSize;
+  UINT32                          Attributes1;
+  UINT32                          Attributes2;
+  CHAR16                          *Value;
+  Data = 0;
+  Attributes1 = 0;
+  Attributes2 = 0;
 
-  Index = 0;
-
-  //
-  // Three PCD type (FeatureFlag, UINT32 and String) are used as the sample.
-  //
-  if (FeaturePcdGet (PcdHelloWorldPrintEnable)) {
-    for (Index = 0; Index < PcdGet32 (PcdHelloWorldPrintTimes); Index ++) {
-      //
-      // Use UefiLib Print API to print string to UEFI console
-      //
-      Print ((CHAR16*)PcdGetPtr (PcdHelloWorldPrintString));
-    }
+  DataSize = sizeof(UINT64);
+  
+  
+  Status = gRT->GetVariable (
+                  L"Timeout",
+                  &gEfiGlobalVariableGuid,
+                  &Attributes1,
+                  &DataSize,
+                  &Data
+                  );
+  if (Status == EFI_SUCCESS) {
+    Print (L"Attributes1 value is %d.(via GetVariable)\n", Attributes1); 
+  } 
+  
+  Status = GetVariable3(
+              L"Timeout",
+             &gEfiGlobalVariableGuid,
+             (VOID **)&Value,
+             &DataSize, 
+             &Attributes2
+             );
+  
+  if (Status == EFI_SUCCESS) {
+      Print (L"Attributes2 value is %d.(via GetVariable3)\n", Attributes2); 
   }
 
   return EFI_SUCCESS;
