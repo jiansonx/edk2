@@ -39,7 +39,8 @@
 #
 
 [Sources]
-  HelloWorld.c
+ # HelloWorld.c
+  DumpHex.c
   HelloWorldStr.uni
 
 [Packages]
