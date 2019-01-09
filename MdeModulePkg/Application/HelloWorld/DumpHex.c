@@ -12,7 +12,7 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
-// #pragma optimize( "", off )
+ #pragma optimize( "", off )
 #include <Uefi.h>
 #include <Library/PcdLib.h>
 #include <Library/UefiLib.h>
@@ -22,6 +22,8 @@
 #include <Guid/GlobalVariable.h>
 #include <Library/MemoryAllocationLib.h>
 #include <stdarg.h>
+
+#define CHECK3(...) { Print(__VA_ARGS__); }
 
 //
 // String token ID of help message text.
@@ -53,10 +55,11 @@ STATIC CONST CHAR8 Hex[] = {
 };
 
 
+#define HEX_DUMP1(Indent, Offset, DataSize, UserData, format, ...) \
+	Print(format, __VA_ARGS__)
 
 
-
-#define HEX_DUMP(Indent, Offset, DataSize, UserData)                                           \
+#define HEX_DUMP(Indent, Offset, DataSize, UserData, format, ...)                                           \
 {                                                                                             \
   UINT8 *Data;                                                                                \
                                                                                               \
@@ -85,7 +88,13 @@ STATIC CONST CHAR8 Hex[] = {
                                                                                               \
     Val[Index * 3]  = 0;                                                                      \
     Str[Index]      = 0;                                                                      \
-    Print( L"%*a%08X: %-48a *%a*\r\n", Indent, "", Offset, Val, Str);                         \
+    va_list args;                                                                             \
+    va_start(args, format);                                                                  \
+                                                                                              \
+    if (*format == 'c') {                                                                     \
+       int c = va_arg(args, int);                                                             \
+    }                                                                                         \
+  /*  Print( L"%*a%08X: %-48a *%a*\r\n", Indent, "", Offset, Val, Str);  */                       \
                                                                                               \
     Data += Size;                                                                             \
     Offset += Size;                                                                           \
@@ -109,7 +118,7 @@ DumpHex (
   IN UINTN        Offset,
   IN UINTN        DataSize,
   IN VOID         *UserData,
-  char            *format,
+  char              *format,
   ...
   )
 {
@@ -122,7 +131,8 @@ DumpHex (
   UINT8 TempByte;
   UINTN Size;
   UINTN Index;
-
+	    VA_LIST args;
+    VA_START(args, format);
   Data = UserData;
   while (DataSize != 0) {
     Size = 16;
@@ -140,19 +150,25 @@ DumpHex (
 
     Val[Index * 3]  = 0;
     Str[Index]      = 0;
-    va_list args;
-    va_start(args, format);
 
+   // __asm int 3;
     if (*format == 'c') {
-       int c = va_arg(args, int);
-       Print(L"%c", (char)c);
+       //int c = va_arg(args, int);
+       char* p = (char *) va_arg(args, void *);
+
+      Print(L"%p", (char*)p);
+      Print(L"%s", (char*)p);
+      Print(L"%s", L"DDDD");
+	Print(L"%s", "dddd");
     }
     Print( L"%*a%08X: %-48a *%a*\r\n", Indent, " ", Offset, Val, Str);
 
     Data += Size;
     Offset += Size;
     DataSize -= Size;
+    ++format;
   }
+	VA_END(args);
 }
                                                                                             \
 
@@ -186,11 +202,16 @@ UefiMain (
   Buffer[18] = 9;
   Buffer[19] = 10;
 
-  DumpHex (0, 0, Length, Buffer , "c", 'a', "c", 'b' );
-
-  // UINTN aa  = 3;
-  // UINTN bb = 0;
-  // HEX_DUMP (bb, aa, Length, Buffer);
+   // DumpHex (0, 0, Length, Buffer , "ccc", L"aa", "cc", 'b' );
+//  CHECK3(L"here %s %s %s", "are", "some", "varargs3(5)\n");
+ // UINTN aa  = 3;
+ // UINTN bb = 0;
+//  HEX_DUMP (bb, aa, Length, Buffer);
+   // DumpHex (0, 0, Length, Buffer , "%s%s%c", L"aa", "cc", 'b' );
+   //HEX_DUMP (0, 0, Length, Buffer , "%s%s%c", L"aa", "cc", 'b' );
+	 
+	 __asm int 3;
+HEX_DUMP1(0, 0, Length, Buffer , L"%s%s%c", L"aa", L"cc", L'b' );
 
   return EFI_SUCCESS;
 }
