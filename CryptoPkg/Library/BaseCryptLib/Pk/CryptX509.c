@@ -329,8 +329,8 @@ RETURN_STATUS
 InternalX509GetNIDName (
   IN      CONST UINT8  *Cert,
   IN      UINTN        CertSize,
-  IN      int          Request_NID,
-     OUT     CHAR8        *CommonName,  OPTIONAL
+  IN      INTN         Request_NID,
+     OUT  CHAR8       *CommonName,  OPTIONAL
   IN OUT  UINTN        *CommonNameSize
   )
 {
