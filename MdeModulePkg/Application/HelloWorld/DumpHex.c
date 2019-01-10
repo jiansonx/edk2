@@ -54,10 +54,10 @@ STATIC CONST CHAR8 Hex[] = {
   'F'
 };
 
-
+#if 0
 #define HEX_DUMP1(Indent, Offset, DataSize, UserData, format, ...) \
-	Print(format, __VA_ARGS__)
-
+	Print( __VA_ARGS__)
+#define CHECK3(...) { Print(__VA_ARGS__); }
 
 #define HEX_DUMP(Indent, Offset, DataSize, UserData, format, ...)                                           \
 {                                                                                             \
@@ -85,23 +85,110 @@ STATIC CONST CHAR8 Hex[] = {
       Val[Index * 3 + 2]  = (CHAR8) ((Index == 7) ? '-' : ' ');                               \
       Str[Index]          = (CHAR8) ((TempByte < ' ' || TempByte > '~') ? '.' : TempByte);    \
     }                                                                                         \
-                                                                                              \
+       Print(__VA_ARGS__)  ;                                                                   \
     Val[Index * 3]  = 0;                                                                      \
     Str[Index]      = 0;                                                                      \
     va_list args;                                                                             \
     va_start(args, format);                                                                  \
                                                                                               \
     if (*format == 'c') {                                                                     \
-       int c = va_arg(args, int);                                                             \
+     /*  int c = va_arg(args, int); */                                                             \
     }                                                                                         \
   /*  Print( L"%*a%08X: %-48a *%a*\r\n", Indent, "", Offset, Val, Str);  */                       \
-                                                                                              \
+       Indent = 0;                                                                                       \
     Data += Size;                                                                             \
     Offset += Size;                                                                           \
     DataSize -= Size;                                                                         \
   }                                                                                           \
 } 
 
+#endif
+
+#define HEX_DUMPP(Indent, Offset, DataSize, UserData, fmt, ...)                           \
+{                                                                                            \
+  UINT8 *Data;                                                                               \
+  CHAR8 Val[50];                                                                             \
+  CHAR8 Str[20];                                                                              \
+   UINT8 TempByte;                                                                             \
+  UINTN Size;                                                                                  \
+  UINTN Index;                                                                                \
+  VA_LIST args;                                                                              \
+  char *format = (char *)(fmt);                                                              \
+  VA_START(args, format);                                                                          \
+  Data = (UINT8 *)(UserData);                                                                    \
+  while (DataSize != 0) {                                                                         \
+    Size = 16;                                                                                    \
+    if (Size > DataSize) {                                                                       \
+      Size = DataSize;                                                                              \
+    }                                                                                                \
+                                                                                              \
+    for (Index = 0; Index < Size; Index += 1) {                                                       \
+      TempByte            = Data[Index];                                                                 \
+      Val[Index * 3 + 0]  = Hex[TempByte >> 4];                                                         \
+      Val[Index * 3 + 1]  = Hex[TempByte & 0xF];                                                            \
+      Val[Index * 3 + 2]  = (CHAR8) ((Index == 7) ? '-' : ' ');                                                 \
+      Str[Index]          = (CHAR8) ((TempByte < ' ' || TempByte > '~') ? '.' : TempByte);                \
+    }                                                                                                    \
+                                                                                                        \
+    Val[Index * 3]  = 0;                                                                             \
+    Str[Index]      = 0;                                                                                  \
+    if (*format == 'c') {                                                                                  \
+       char* p = (char *) va_arg(args, void *);                                                                \
+      Print(L"%s", (char*)p);                                                                             \
+    }                                                                                                  \
+    Print( L"%*a%08X: %-48a *%a*\r\n", Indent, " ", Offset, Val, Str);                                \
+    Data += Size;                                                                                     \
+    Offset += Size;                                                                                     \
+    DataSize -= Size;                                                                              \
+    ++format;                                                                                     \
+  }                                                                                                    \
+  VA_END(args);                                                                                      \
+}                                                                                                   \                                                                        
+
+
+
+
+
+#define HEX_DUMPPp(Indent, Offset, DataSize, UserData, fmt, ...)                     \
+{                                                                                    \
+  UINT8 *Data;                                                                         \
+  CHAR8 Val[50];                                                                  \
+  CHAR8 Str[20]; \
+   UINT8 TempByte;                                                                 \
+  UINTN Size;                                                                       \
+  UINTN Index;                                                                      \
+  VA_LIST args;                                                                    \
+  char *format = (char *)(fmt);                                                   \
+  VA_START(args, format);                                                            \
+  Data = (UINT8 *)(UserData);                                                        \
+  while (DataSize != 0) {                                                         \
+    Size = 16;                                                                   \
+    if (Size > DataSize) {                                                       \
+      Size = DataSize;                                                          \
+    }                                                                                               \
+                                                                                               \
+    for (Index = 0; Index < Size; Index += 1) {                                                  \
+      TempByte            = Data[Index];                                                                 \
+      Val[Index * 3 + 0]  = Hex[TempByte >> 4];                                                          \
+      Val[Index * 3 + 1]  = Hex[TempByte & 0xF];                                                             \
+      Val[Index * 3 + 2]  = (CHAR8) ((Index == 7) ? '-' : ' ');                                                \
+      Str[Index]          = (CHAR8) ((TempByte < ' ' || TempByte > '~') ? '.' : TempByte);                 \
+    }                                                                                                     \
+                                                                                                         \
+    Val[Index * 3]  = 0;                                                                              \
+    Str[Index]      = 0;                                                                               \
+    if (*format == 'c') {                                                                                \
+       char* p = (char *) va_arg(args, void *);                                                            \
+      Print(L"%s", (char*)p);                                                                               \
+    }                                                                                                \
+   /* Print( L"%*a%08X: %-48a *%a* r n", Indent, " ", Offset, Val, Str); */                            \
+    Data += Size;                                                                           \
+    Offset += Size;                                                                     \
+    DataSize -= Size;                                                                    \
+    ++format;                                                                            \
+  }                                                                                    \
+  VA_END(args);                                                                      \
+}           \
 
 /**
   Dump some hexadecimal data to the screen.
@@ -123,16 +210,14 @@ DumpHex (
   )
 {
   UINT8 *Data;
-
   CHAR8 Val[50];
-
   CHAR8 Str[20];
 
   UINT8 TempByte;
   UINTN Size;
   UINTN Index;
-	    VA_LIST args;
-    VA_START(args, format);
+  VA_LIST args;
+  VA_START(args, format);
   Data = UserData;
   while (DataSize != 0) {
     Size = 16;
@@ -150,27 +235,19 @@ DumpHex (
 
     Val[Index * 3]  = 0;
     Str[Index]      = 0;
-
-   // __asm int 3;
-    if (*format == 'c') {
-       //int c = va_arg(args, int);
+    if (*format == 'c') {     
        char* p = (char *) va_arg(args, void *);
-
-      Print(L"%p", (char*)p);
       Print(L"%s", (char*)p);
-      Print(L"%s", L"DDDD");
-	Print(L"%s", "dddd");
     }
     Print( L"%*a%08X: %-48a *%a*\r\n", Indent, " ", Offset, Val, Str);
-
     Data += Size;
     Offset += Size;
     DataSize -= Size;
     ++format;
   }
-	VA_END(args);
+  VA_END(args);
 }
-                                                                                            \
+                                                                                            
 
 /**
   The user Entry Point for Application. The user code starts with this function
@@ -202,16 +279,16 @@ UefiMain (
   Buffer[18] = 9;
   Buffer[19] = 10;
 
-   // DumpHex (0, 0, Length, Buffer , "ccc", L"aa", "cc", 'b' );
+  //  DumpHex (0, 0, Length, Buffer , "ccc", L"aa", L"cc", 'b' );
 //  CHECK3(L"here %s %s %s", "are", "some", "varargs3(5)\n");
  // UINTN aa  = 3;
- // UINTN bb = 0;
+  UINTN bb = 0;
 //  HEX_DUMP (bb, aa, Length, Buffer);
    // DumpHex (0, 0, Length, Buffer , "%s%s%c", L"aa", "cc", 'b' );
-   //HEX_DUMP (0, 0, Length, Buffer , "%s%s%c", L"aa", "cc", 'b' );
-	 
-	 __asm int 3;
-HEX_DUMP1(0, 0, Length, Buffer , L"%s%s%c", L"aa", L"cc", L'b' );
-
+ //  HEX_DUMP (aa, bb, Length, Buffer , L"here %s %s %s", L"are", L"some", L"varargs3(5)\n");
+    HEX_DUMPPp(0, bb, Length, Buffer , "ccc", L"aa", L"cc", L'b' );
+ // __asm int 3;
+ //HEX_DUMP1(0, 0, Length, Buffer , L"%s%s%c", L"aa", L"cc", L'b' );
+ // CHECK3(L"here %s %s %s", L"are", L"some", L"varargs3(5)\n");
   return EFI_SUCCESS;
 }
