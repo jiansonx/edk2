@@ -48,6 +48,7 @@
   Pk/CryptRsaBasic.c
   Pk/CryptRsaExt.c
   Pk/CryptPkcs5Pbkdf2.c
+  Pk/CryptPkcs1Oaep.c
   Pk/CryptPkcs7Sign.c
   Pk/CryptPkcs7Verify.c
   Pk/CryptDh.c
