@@ -389,23 +389,28 @@ InternalX509GetNIDName (
   ReturnStatus    = RETURN_NOT_FOUND;
 
   Index = X509_NAME_get_index_by_NID (X509Name, Request_NID, -1);
-  if (Index < 0) {
-
-    DEBUG((DEBUG_ERROR,"NID not found\n"));
+  if (Index < 0) {   
+    DEBUG ((DEBUG_ERROR, "[%a:%d] NID not found\n",
+      __FUNCTION__, __LINE__
+              ));
     goto _Exit;
   }
 
   Entry = X509_NAME_get_entry (X509Name, Index);
-  if (Entry == NULL) {
-    DEBUG((DEBUG_ERROR,"Entry %d not found\n", Index));
+  if (Entry == NULL) {   
+    DEBUG ((DEBUG_ERROR, "[%a:%d] Entry %d not found\n",
+      __FUNCTION__, __LINE__, Index
+              ));
     goto _Exit;
   }
 
   EntryData = X509_NAME_ENTRY_get_data (Entry);
 
   Length = ASN1_STRING_to_UTF8 (&UTF8Name, EntryData);
-  if (Length < 0) {
-    DEBUG((DEBUG_ERROR,"Could not convert test to UEF8\n"));
+  if (Length < 0) {    
+    DEBUG ((DEBUG_ERROR, "[%a:%d] Could not convert test to UEF8\n",
+    __FUNCTION__, __LINE__
+              ));
     ReturnStatus    = RETURN_INVALID_PARAMETER;
     goto _Exit;
   }
@@ -470,7 +475,6 @@ X509GetCommonName (
   IN OUT  UINTN        *CommonNameSize
   )
 {
-
   return InternalX509GetNIDName (Cert, CertSize, NID_commonName, CommonName, CommonNameSize);
 }
 
@@ -509,7 +513,6 @@ X509GetOrganizationName (
   IN OUT  UINTN        *NameBufferSize
   )
 {
-
   return InternalX509GetNIDName (Cert, CertSize, NID_organizationName, NameBuffer, NameBufferSize);
 }
 
@@ -685,8 +688,7 @@ X509VerifyCert (
   // Allow partial certificate chains, terminated by a non-self-signed but
   // still trusted intermediate certificate. Also disable time checks.
   //
-  X509_STORE_set_flags (CertStore,
-                        X509_V_FLAG_PARTIAL_CHAIN | X509_V_FLAG_NO_CHECK_TIME);
+  X509_STORE_set_flags (CertStore, X509_V_FLAG_PARTIAL_CHAIN | X509_V_FLAG_NO_CHECK_TIME);
 
   //
   // Set up X509_STORE_CTX for the subsequent verification operation.

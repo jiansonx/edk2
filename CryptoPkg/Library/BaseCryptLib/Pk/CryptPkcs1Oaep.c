@@ -1,31 +1,21 @@
-/** 
-This file contains UEFI wrapper functions for RSA PKCS1v2 OAEP encryption routines.
-MS_CHANGE_194897
-MSChange [ALL]
+/** @file
+  UEFI wrapper functions for RSA PKCS1v2 OAEP encryption routines..
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.
+  Copyright (c) 2010 - 2019, Intel Corporation. All rights reserved.<BR>
+  This program and the accompanying materials
+  are licensed and made available under the terms and conditions of the BSD License
+  which accompanies this distribution.  The full text of the license may be found at
+  http://opensource.org/licenses/bsd-license.php
 
-
-Copyright (C) 2016 Microsoft Corporation. All Rights Reserved.
+  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
 
 #include "InternalCryptLib.h"
-
 #include <openssl/objects.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
-
 #include <Library/MemoryAllocationLib.h>
 
 /**
@@ -77,15 +67,15 @@ Pkcs1v2Encrypt (
   // First step, check all buffers. We *hate* NULL buffers. They burns us.
   if (PublicKey == NULL || InData == NULL || EncryptedData == NULL || EncryptedDataSize == NULL)
   {
-    DEBUG(( DEBUG_ERROR, "%a - Invalid parameter!\n", __FUNCTION__ )); // MS_CHANGE
+    DEBUG(( DEBUG_ERROR, "[%a:%d] - Invalid parameter!\n", __FUNCTION__, __LINE__ )); 
     return FALSE;
   }
 
   //
-  // Check public key size.   
+  // Check public key size.
   if (PublicKeySize > 0xFFFFFFFF)
   {
-    DEBUG((DEBUG_ERROR, "%a - Invalid parameter. Public Key Size too large for implementation!\n", __FUNCTION__)); // MS_CHANGE
+    DEBUG((DEBUG_ERROR, "[%a:%d] - Invalid parameter. Public Key Size too large for implementation!\n", __FUNCTION__, __LINE__)); 
     return FALSE;
   }
 
@@ -121,7 +111,7 @@ Pkcs1v2Encrypt (
   CertData = d2i_X509( &CertData, &TempPointer, (UINT32)PublicKeySize );
   if (CertData == NULL)
   {
-    DEBUG(( DEBUG_ERROR, "%a - Failed to parse x509 cert!\n", __FUNCTION__ )); // MS_CHANGE
+    DEBUG(( DEBUG_ERROR, "[%a:%d]  - Failed to parse x509 cert!\n", __FUNCTION__, __LINE__  )); 
     goto _Exit;
   }
 
@@ -131,7 +121,7 @@ Pkcs1v2Encrypt (
   InternalPublicKey = X509_get_pubkey( CertData );
   if (InternalPublicKey == NULL)
   {
-    DEBUG(( DEBUG_ERROR, "%a - Failed to extract public key!\n", __FUNCTION__ )); // MS_CHANGE
+    DEBUG(( DEBUG_ERROR, "[%a:%d]  - Failed to extract public key!\n", __FUNCTION__, __LINE__ )); 
     goto _Exit;
   }
 
@@ -140,14 +130,14 @@ Pkcs1v2Encrypt (
   PkeyCtx = EVP_PKEY_CTX_new( InternalPublicKey, NULL );      // We use NULL for the engine so the default engine is used.
   if (PkeyCtx == NULL)
   {
-    DEBUG(( DEBUG_ERROR, "%a - Context creation failed!\n", __FUNCTION__ )); // MS_CHANGE
+    DEBUG(( DEBUG_ERROR, "[%a:%d]  - Context creation failed!\n", __FUNCTION__, __LINE__ )); 
     goto _Exit;
   }
   // Initialize the context and set the desired padding.
   if (EVP_PKEY_encrypt_init( PkeyCtx ) <= 0 ||
       EVP_PKEY_CTX_set_rsa_padding( PkeyCtx, RSA_PKCS1_OAEP_PADDING ) <= 0)
   {
-    DEBUG(( DEBUG_ERROR, "%a - Failed to initialize the context!\n", __FUNCTION__ )); // MS_CHANGE
+    DEBUG(( DEBUG_ERROR, "[%a:%d] - Failed to initialize the context!\n", __FUNCTION__, __LINE__  )); 
     goto _Exit;
   }
 
@@ -155,7 +145,7 @@ Pkcs1v2Encrypt (
   // Attempt to determine the required buffer length for malloc'ing.
   if (EVP_PKEY_encrypt( PkeyCtx, NULL, &OutDataSize, InData, InDataSize ) <= 0)
   {
-    DEBUG(( DEBUG_ERROR, "%a - Failed to determine output buffer size!\n", __FUNCTION__ )); // MS_CHANGE
+    DEBUG(( DEBUG_ERROR, "[%a:%d] - Failed to determine output buffer size!\n", __FUNCTION__, __LINE__ )); 
     goto _Exit;
   }
 
@@ -164,7 +154,7 @@ Pkcs1v2Encrypt (
   OutData = AllocatePool( OutDataSize );    // We'll just go ahead and use UEFI allocate for this.
   if (OutData == NULL)
   {
-    DEBUG(( DEBUG_ERROR, "%a - Failed to allocate the output buffer!\n", __FUNCTION__ )); // MS_CHANGE
+    DEBUG(( DEBUG_ERROR, "[%a:%d] - Failed to allocate the output buffer!\n", __FUNCTION__, __LINE__ )); 
     goto _Exit;
   }
 
@@ -204,4 +194,4 @@ _Exit:
   }
 
   return Result;
-} 
+}
