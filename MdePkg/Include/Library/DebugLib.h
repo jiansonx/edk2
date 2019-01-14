@@ -526,4 +526,52 @@ DebugPrintLevelEnabled (
     BASE_CR (Record, TYPE, Field)
 #endif
 
+#define DUMP_HEX(ErrorLevel,                                                   \
+                 Offset,                                                       \
+                 Data,                                                         \
+                 DataSize,                                                     \
+                 LinePrefixFormat,                                             \
+                 ...)                                                          \
+                                                                               \
+{                                                                              \
+  UINT8 *DataTmp;                                                              \
+  UINT8 Val[50];                                                               \
+  UINT8 Str[20];                                                               \
+  UINT8 TempByte;                                                              \
+  UINTN Size;                                                                  \
+  UINTN Index;                                                                 \
+  UINTN OffsetTmp;                                                             \
+  UINTN DataSizeTmp;                                                           \
+  CONST CHAR8 *Hex = "0123456789ABCDEF";                                       \
+  OffsetTmp = Offset;                                                          \
+  DataSizeTmp = DataSize;                                                      \
+  DataTmp = (UINT8 *)(Data);                                                   \
+                                                                               \
+  while (DataSizeTmp != 0) {                                                   \
+    Size = 16;                                                                 \
+    if (Size > DataSizeTmp) {                                                  \
+      Size = DataSizeTmp;                                                      \
+    }                                                                          \
+                                                                               \
+    for (Index = 0; Index < Size; Index += 1) {                                \
+      TempByte            = (UINT8) DataTmp[Index];                            \
+      Val[Index * 3 + 0]  = (UINT8) Hex[TempByte >> 4];                        \
+      Val[Index * 3 + 1]  = (UINT8) Hex[TempByte & 0xF];                       \
+      Val[Index * 3 + 2]  = (CHAR8) ((Index == 7) ? '-' : ' ');                \
+      Str[Index]          =                                                    \
+               (CHAR8) ((TempByte < ' ' || TempByte > '~') ? '.' : TempByte);  \
+    }                                                                          \
+                                                                               \
+    Val[Index * 3]  = 0;                                                       \
+    Str[Index]      = 0;                                                       \
+                                                                               \
+    DebugPrint(ErrorLevel, LinePrefixFormat, ##__VA_ARGS__);                   \
+    DebugPrint(ErrorLevel, "%08X: %-48a *%a*\r\n", OffsetTmp, Val, Str);       \
+    DataTmp = (UINT8 *) (((UINTN) DataTmp) + Size);                            \
+    OffsetTmp += Size;                                                         \
+    DataSizeTmp -= Size;                                                       \
+  }                                                                            \
+}                                                                              \
+
+
 #endif
