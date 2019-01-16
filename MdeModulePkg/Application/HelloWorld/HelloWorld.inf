@@ -40,7 +40,9 @@
 
 [Sources]
  # HelloWorld.c
-  DumpHex.c
+ # DumpHex.c
+   TestCase1371.c
+ # TestCase1396.c
   HelloWorldStr.uni
 
 [Packages]
@@ -51,6 +53,7 @@
   UefiApplicationEntryPoint
   UefiLib
   PcdLib
+  DebugLib
 
 [FeaturePcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdHelloWorldPrintEnable   ## CONSUMES
