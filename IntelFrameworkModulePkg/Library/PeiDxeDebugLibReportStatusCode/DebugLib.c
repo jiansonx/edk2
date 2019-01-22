@@ -16,10 +16,8 @@
 **/
 
 #include <PiPei.h>
-
 #include <Guid/StatusCodeDataTypeId.h>
 #include <Guid/StatusCodeDataTypeDebug.h>
-
 #include <Library/DebugLib.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -36,12 +34,9 @@
 
   If Format is NULL, then ASSERT().
 
-  If the length of the message string specificed by Format is larger than the maximum allowable
-  record length, then directly return and not print it.
-
   @param  ErrorLevel  The error level of the debug message.
-  @param  Format      Format string for the debug message to print.
-  @param  ...         Variable argument list whose contents are accessed
+  @param  Format      The format string for the debug message to print.
+  @param  ...         The variable argument list whose contents are accessed
                       based on the format string specified by Format.
 
 **/
@@ -53,11 +48,44 @@ DebugPrint (
   ...
   )
 {
+  VA_LIST         Marker;
+
+  ASSERT(Format != NULL);
+
+  VA_START(Marker, Format);
+  DebugPrintValist(ErrorLevel, Format, Marker);
+  VA_END(Marker);
+
+}
+
+/**
+  Prints a debug message to the debug output device if the specified error level is enabled.
+
+  If any bit in ErrorLevel is also set in DebugPrintErrorLevelLib function
+  GetDebugPrintErrorLevel (), then print the message specified by Format and the
+  associated variable argument list to the debug output device.
+
+  If Format is NULL, then ASSERT().
+
+  If the length of the message string specificed by Format is larger than the maximum allowable
+  record length, then directly return and not print it.
+
+  @param  ErrorLevel    The error level of the debug message.
+  @param  Format        Format string for the debug message to print.
+  @param  VaListMarker  VA_LIST marker for the variable argument list.
+
+**/
+VOID
+EFIAPI
+DebugPrintValist (
+  IN  UINTN        ErrorLevel,
+  IN  CONST CHAR8  *Format,
+  VA_LIST          VaListMarker
+  )
+{
   UINT64          Buffer[(EFI_STATUS_CODE_DATA_MAX_SIZE / sizeof (UINT64)) + 1];
   EFI_DEBUG_INFO  *DebugInfo;
   UINTN           TotalSize;
-  UINTN           DestBufferSize;
-  VA_LIST         VaListMarker;
   BASE_LIST       BaseListMarker;
   CHAR8           *FormatString;
   BOOLEAN         Long;
@@ -97,7 +125,7 @@ DebugPrint (
   // If the TotalSize is larger than the maximum record size, then return
   //
   if (TotalSize > sizeof (Buffer)) {
-    return;
+    TotalSize = sizeof (Buffer);
   }
 
   //
@@ -114,22 +142,24 @@ DebugPrint (
   FormatString          = (CHAR8 *)((UINT64 *)(DebugInfo + 1) + 12);
 
   //
-  // Copy the Format string into the record
+  // Copy the Format string into the record. It will be truncated if it's too long.
   //
-  // According to the content structure of Buffer shown above, the size of
-  // the FormatString buffer is the size of Buffer minus the Padding
-  // (4 bytes), minus the size of EFI_DEBUG_INFO, minus the size of
-  // variable arguments (12 * sizeof (UINT64)).
-  //
-  DestBufferSize = sizeof (Buffer) - 4 - sizeof (EFI_DEBUG_INFO) - 12 * sizeof (UINT64);
-  AsciiStrCpyS (FormatString, DestBufferSize / sizeof (CHAR8), Format);
+  AsciiStrnCpyS (
+    FormatString, sizeof(Buffer) - (4 + sizeof(EFI_DEBUG_INFO) + 12 * sizeof(UINT64)),
+    Format,       sizeof(Buffer) - (4 + sizeof(EFI_DEBUG_INFO) + 12 * sizeof(UINT64)) - 1
+    );
 
   //
   // The first 12 * sizeof (UINT64) bytes following EFI_DEBUG_INFO are for variable arguments
   // of format in DEBUG string, which is followed by the DEBUG format string.
   // Here we will process the variable arguments and pack them in this area.
   //
-  VA_START (VaListMarker, Format);
+
+
+  //
+  // Use the actual format string.
+  //
+  Format = FormatString;
   for (; *Format != '\0'; Format++) {
     //
     // Only format with prefix % is processed.
@@ -213,12 +243,10 @@ DebugPrint (
     //
     // If the converted BASE_LIST is larger than the 12 * sizeof (UINT64) allocated bytes, then return
     //
-    if ((CHAR8 *)BaseListMarker > FormatString) {
-      VA_END (VaListMarker);
+    if ((CHAR8 *)BaseListMarker > FormatString) {      
       return;
     }
   }
-  VA_END (VaListMarker);
 
   //
   // Send the DebugInfo record

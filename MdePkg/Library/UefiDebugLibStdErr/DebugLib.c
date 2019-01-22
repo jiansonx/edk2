@@ -51,8 +51,7 @@ DebugPrint (
   IN  CONST CHAR8  *Format,
   ...
   )
-{
-  CHAR16   Buffer[MAX_DEBUG_MESSAGE_LENGTH];
+{  
   VA_LIST  Marker;
 
   //
@@ -71,8 +70,24 @@ DebugPrint (
   // Convert the DEBUG() message to a Unicode String
   //
   VA_START (Marker, Format);
-  UnicodeVSPrintAsciiFormat (Buffer, MAX_DEBUG_MESSAGE_LENGTH, Format, Marker);
+   DebugPrintValist(ErrorLevel, Format, Marker);
+ // UnicodeVSPrintAsciiFormat (Buffer, MAX_DEBUG_MESSAGE_LENGTH, Format, Marker);
   VA_END (Marker);
+
+}
+
+
+
+VOID
+EFIAPI
+DebugPrintValist (
+  IN  UINTN        ErrorLevel,
+  IN  CONST CHAR8  *Format,
+  VA_LIST          VaListMarker
+  )
+{
+  CHAR16   Buffer[MAX_DEBUG_MESSAGE_LENGTH];
+  UnicodeVSPrintAsciiFormat (Buffer, MAX_DEBUG_MESSAGE_LENGTH, Format, VaListMarker);
 
   //
   // Send the print string to the Standard Error device
@@ -81,6 +96,7 @@ DebugPrint (
     gST->StdErr->OutputString (gST->StdErr, Buffer);
   }
 }
+
 
 
 /**

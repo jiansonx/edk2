@@ -136,6 +136,25 @@ DebugPrint (
 }
 
 
+VOID
+EFIAPI
+DebugPrintValist (
+  IN  UINTN        ErrorLevel,
+  IN  CONST CHAR8  *Format,
+  VA_LIST          VaListMarker
+  )
+{
+  CHAR8      Buffer[MAX_DEBUG_MESSAGE_LENGTH];
+  AsciiVSPrint (Buffer, sizeof (Buffer), Format, VaListMarker);
+
+
+  //
+  // Send the print string to EFI_DEBUGPORT_PROTOCOL.Write.
+  //
+  UefiDebugLibDebugPortProtocolWrite (Buffer, AsciiStrLen (Buffer));
+}
+
+
 /**
   Prints an assert message containing a filename, line number, and description.
   This may be followed by a breakpoint or a dead loop.

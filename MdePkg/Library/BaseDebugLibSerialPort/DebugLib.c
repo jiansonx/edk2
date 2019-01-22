@@ -69,8 +69,7 @@ DebugPrint (
   IN  CONST CHAR8  *Format,
   ...
   )
-{
-  CHAR8    Buffer[MAX_DEBUG_MESSAGE_LENGTH];
+{  
   VA_LIST  Marker;
 
   //
@@ -89,14 +88,43 @@ DebugPrint (
   // Convert the DEBUG() message to an ASCII String
   //
   VA_START (Marker, Format);
-  AsciiVSPrint (Buffer, sizeof (Buffer), Format, Marker);
+  DebugPrintValist(ErrorLevel, Format, Marker);
   VA_END (Marker);
+}
 
+
+
+VOID
+EFIAPI
+DebugPrintValist (
+  IN  UINTN        ErrorLevel,
+  IN  CONST CHAR8  *Format,
+  VA_LIST          VaListMarker
+  )
+{
+  CHAR8    Buffer[MAX_DEBUG_MESSAGE_LENGTH];
+  //
+  // If Format is NULL, then ASSERT().
+  //
+  ASSERT (Format != NULL);
+	
+  //
+  // Check driver debug mask value and global mask
+  //
+  if ((ErrorLevel & GetDebugPrintErrorLevel ()) == 0) {
+    return;
+  }
+  
+  
+  AsciiVSPrint (Buffer, sizeof (Buffer), Format, VaListMarker);	
+	
   //
   // Send the print string to a Serial Port
   //
   SerialPortWrite ((UINT8 *)Buffer, AsciiStrLen (Buffer));
+
 }
+
 
 
 /**

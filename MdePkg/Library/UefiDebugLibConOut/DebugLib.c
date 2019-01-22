@@ -68,8 +68,8 @@ DebugPrint (
   //
   // Convert the DEBUG() message to a Unicode String
   //
-  VA_START (Marker, Format);
-  UnicodeVSPrintAsciiFormat (Buffer, MAX_DEBUG_MESSAGE_LENGTH,  Format, Marker);
+  VA_START (Marker, Format); 
+  DebugPrintValist(ErrorLevel, Format, Marker);
   VA_END (Marker);
 
 
@@ -80,6 +80,27 @@ DebugPrint (
     gST->ConOut->OutputString (gST->ConOut, Buffer);
   }
 }
+
+VOID
+EFIAPI
+DebugPrintValist (
+  IN  UINTN        ErrorLevel,
+  IN  CONST CHAR8  *Format,
+  VA_LIST          VaListMarker
+  )
+{
+  CHAR16   Buffer[MAX_DEBUG_MESSAGE_LENGTH];
+  UnicodeVSPrintAsciiFormat (Buffer, MAX_DEBUG_MESSAGE_LENGTH, Format, VaListMarker);
+
+  //
+  // Send the print string to the Console Output device
+  //
+  if ((gST != NULL) && (gST->ConOut != NULL)) {
+    gST->ConOut->OutputString (gST->ConOut, Buffer);
+  }
+}
+
+
 
 
 /**

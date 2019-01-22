@@ -46,6 +46,17 @@ DebugPrint (
 {
 }
 
+VOID
+EFIAPI
+DebugPrintValist (
+  IN  UINTN        ErrorLevel,
+  IN  CONST CHAR8  *Format,
+  VA_LIST          VaListMarker
+  )
+{
+
+}
+
 
 /**
 
